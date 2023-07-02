@@ -39,6 +39,26 @@ Flight::route('POST /template', function() {
   $fromCurrency = $data['fromCurrency'];
   $toCurrency = $data['toCurrency'];
   $email = $data['email'];
+
+  // Check if the fromCurrency and toCurrency already exists in the database
+  $sql = 'SELECT COUNT(*) as count FROM template WHERE  fromCurrency = :fromCurrency AND toCurrency = :toCurrency';
+  $stmt = $db->prepare($sql);
+  $stmt->bindParam(':fromCurrency', $fromCurrency);
+  $stmt->bindParam(':toCurrency', $toCurrency);
+  $stmt->execute();
+  $result = $stmt->fetch(PDO::FETCH_ASSOC);
+  $sameCurrencyCount = $result['count'];
+
+  if($sameCurrencyCount>0){
+    Flight::json(array('message' => 'The Currency already exist'), 409);
+    return;
+  }
+
+  if($fromCurrency == $toCurrency){
+    Flight::json(array('message' => 'Invalid currency conversion'), 409);
+    return;
+  }
+
   $query = "INSERT INTO template (name, fromCurrency, toCurrency, email) VALUES (:name, :fromCurrency, :toCurrency, :email)";
   $stmt = $db->prepare($query);
   $stmt->bindValue(':name', $name, PDO::PARAM_STR);

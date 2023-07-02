@@ -913,12 +913,16 @@ require "./header.php"
         // alert("Favorite currency created successfully");
         document.getElementById("successMessage").classList.remove("d-none");
         document.getElementById("errorMessage").classList.add("d-none");
+        submitForm.reset();
         showTemplateCurrencies();
+
       } else {
-        // Request was unsuccessful
-        console.error("Error:", xhr.statusText);
-        document.getElementById("errorMessage").classList.remove("d-none");
-        document.getElementById("successMessage").classList.add("d-none");
+          // Request was unsuccessful
+          const errorResponse = JSON.parse(xhr.response);
+          console.log(errorResponse);
+          document.getElementById("errorMessage").classList.remove("d-none");
+          document.getElementById("successMessage").classList.add("d-none");
+          document.getElementById("errorMessage").innerText = errorResponse?.message;
         }
       };
       // Define the callback function to handle any error
@@ -951,6 +955,11 @@ const deleteTemplateCurrencies = (currencyId)=>{
   xhr.open('DELETE', `http://localhost/rahat/api/template/template/${id}`, true);
   xhr.onload = function () {
     if (this.status == 200) {
+      const response = JSON.parse(xhr.responseText);
+      console.log(response);
+      document.getElementById("successMessage").classList.remove("d-none");
+      document.getElementById("errorMessage").classList.add("d-none");
+      document.getElementById("successMessage").innerText = response?.message;
       showTemplateCurrencies();
     }
   };
@@ -1025,6 +1034,9 @@ updateCurrencyForm.addEventListener("submit", function(event){
       // Request was successful, handle the response
       const response = JSON.parse(xhr.responseText);
       console.log(response);
+      document.getElementById("successMessage").classList.remove("d-none");
+      document.getElementById("errorMessage").classList.add("d-none");
+      document.getElementById("successMessage").innerText = response?.message;
       // Additional logic here
       showTemplateCurrencies();
     } else {

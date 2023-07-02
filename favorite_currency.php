@@ -789,7 +789,7 @@ require "./header.php"
   }
 
   
-  //TODO:: show student information
+  //TODO:: show FAVORITE CURRENCY
   const showFavoriteCurrencies = () => {
     fetchUser().then(res=>res.json()).then(data=>{
       var xhr = new XMLHttpRequest();
@@ -840,14 +840,15 @@ require "./header.php"
   //TODO:: Call the showFavoriteCurrencies function to fetch and display the user data
   showFavoriteCurrencies();
 
+
+// TODO:: INSERT FAVORITE CURRENCY 
+
   const submitForm = document.getElementById("submitForm");
   submitForm.addEventListener("submit", function(event){
     event.preventDefault();
-    console.log("submit");
 
     const toCurrency = document.getElementById("toCurrency").value;
     const fromCurrency = document.getElementById("fromCurrency").value;
-
     
       fetchUser().then(res=>res.json()).then(data=>{
 
@@ -872,16 +873,17 @@ require "./header.php"
             const response = JSON.parse(xhr.responseText);
             console.log(response);
             // Handle the response data
-            // For example, display a success message to the user
-            // alert("Favorite currency created successfully");
             document.getElementById("successMessage").classList.remove("d-none");
             document.getElementById("errorMessage").classList.add("d-none");
             showFavoriteCurrencies();
           } else {
             // Request was unsuccessful
-            console.error("Error:", xhr.statusText);
+            console.error("Error:", xhr.response);
+            const errorResponse = JSON.parse(xhr.response);
+            console.log(errorResponse);
             document.getElementById("errorMessage").classList.remove("d-none");
             document.getElementById("successMessage").classList.add("d-none");
+            document.getElementById("errorMessage").innerText = errorResponse?.message;
           }
         };
 
@@ -894,7 +896,6 @@ require "./header.php"
 
         // Convert the form data to JSON string
         const jsonData = JSON.stringify(formData);
-
         // Send the request with the JSON data
         xhr.send(jsonData);
         
@@ -903,26 +904,35 @@ require "./header.php"
       })
   });
 
+// TODO:: DELETE FAVORITE CURRENCY 
 
 const deleteFavoriteCurrencies = (currencyId)=>{
   const id = parseInt(currencyId);
-  console.log(id);
-
+  // console.log(id);
+  
   const flag = window.confirm('Are you sure you want to delete it?');
-  console.log(flag);
+  // console.log(flag);
   if(!flag){
     return;
   }
+
   var xhr = new XMLHttpRequest();
   xhr.open('DELETE', `http://localhost/rahat/api/favorite_currencies/favorite_currencies/${id}`, true);
   xhr.onload = function () {
     if (this.status == 200) {
+      const response = JSON.parse(xhr.responseText);
+      console.log(response);
+      document.getElementById("successMessage").classList.remove("d-none");
+      document.getElementById("errorMessage").classList.add("d-none");
+      document.getElementById("successMessage").innerText = response?.message;
       showFavoriteCurrencies();
     }
   };
   xhr.send();
 }
 
+
+// TODO:: EDIT FAVORITE CURRENCY 
 
 const editFavoriteCurrencies = (currencyId)=>{
   const id = parseInt(currencyId);
@@ -951,7 +961,6 @@ const editFavoriteCurrencies = (currencyId)=>{
   xhr.send();
 
 }
-
 const updateCurrencyForm = document.getElementById("updateCurrencyForm");
 updateCurrencyForm.addEventListener("submit", function(event){
   event.preventDefault();
@@ -987,6 +996,9 @@ updateCurrencyForm.addEventListener("submit", function(event){
       // Request was successful, handle the response
       const response = JSON.parse(xhr.responseText);
       console.log(response);
+      document.getElementById("successMessage").classList.remove("d-none");
+      document.getElementById("errorMessage").classList.add("d-none");
+      document.getElementById("successMessage").innerText = response?.message;
       // Additional logic here
       showFavoriteCurrencies();
     } else {
