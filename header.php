@@ -18,17 +18,25 @@
         var fromCurrency = $('#fromCurrency').val();
         var toCurrency = $('#toCurrency').val();
         var amount = $('#amount').val();
-        console.log(fromCurrency,toCurrency,amount)
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        let formattedDate = `${year}-${month}-${day}`;
+        formattedDate = new Date(formattedDate);
+        console.log(fromCurrency,toCurrency,amount,formattedDate)
         const apiKey = "7f299f7f341a48e5955d6f2912d7e2d8";
 
         $.ajax({
-          url: `https://openexchangerates.org/api/latest.json?app_id=${apiKey}&base=${fromCurrency}`,
+          url: `https://api.exchangerate.host/convert?from=${fromCurrency}&to=${toCurrency}&amount=${amount}&date=${formattedDate}`,
           method: 'GET',
           success: function(response) {
-            var conversionRate = response.rates[toCurrency];
-            var convertedAmount = amount * conversionRate;
-            var result = amount + ' ' + fromCurrency + ' = ' + convertedAmount + ' ' + toCurrency;
+            // var conversionRate = response.rates[toCurrency];
+            // var convertedAmount = amount * conversionRate;
+            var result = amount + ' ' + fromCurrency + ' = ' + response?.result.toFixed(2) + ' ' + toCurrency;
             $('#result').text(result);
+            $('#result').addClass('mt-2 bg-primary text-light rounded px-3 py-2');
+            console.log(response)
           },
           error: function(xhr, status, error) {
             $('.result').text('');
@@ -166,7 +174,8 @@
                   <li class="nav-item">
                     <a class="nav-link" href="profile.php">Profile</a>
                   </li>
-                  <li class="nav-item dropdown">
+                  
+                  <li class="nav-item dropdown d-none">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                       Crud
                     </a>
