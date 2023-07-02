@@ -4,6 +4,13 @@ require "./header.php"
 
 
 
+<div id="successMessage" class="alert alert-success mt-3 d-none" role="alert">
+  Favorite currency created successfully
+</div>
+
+<div id="errorMessage" class="alert alert-danger mt-3 d-none" role="alert">
+  An error occurred. Please try again later.
+</div>
 
 <!-- Update Books Modal -->
 <div class="modal fade" id="updateFavoriteCurrencyModal" tabindex="-1" aria-labelledby="updateFavoriteCurrencyModalLabel" aria-hidden="true">
@@ -415,7 +422,7 @@ require "./header.php"
     const userData = JSON.parse(getCookie('crud-user'));
     // console.log(userData?.token);
     const jsonData = JSON.stringify({token:userData?.token});
-    console.log(jsonData);
+    // console.log(jsonData);
     var xhr = new XMLHttpRequest();
     xhr.open('POST', `http://localhost/rahat/api/verify-jwt`, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
@@ -480,6 +487,11 @@ require "./header.php"
     xhr.open('DELETE', `http://localhost/rahat/api/conversion/conversion/${id}`, true);
     xhr.onload = function () {
       if (this.status == 200) {
+        const response = JSON.parse(xhr.responseText);
+        console.log(response);
+        document.getElementById("successMessage").classList.remove("d-none");
+        document.getElementById("errorMessage").classList.add("d-none");
+        document.getElementById("successMessage").innerText = response?.message;
         showConversion();
       }
     };
@@ -547,6 +559,9 @@ require "./header.php"
         // Request was successful, handle the response
         const response = JSON.parse(xhr.responseText);
         console.log(response);
+        document.getElementById("successMessage").classList.remove("d-none");
+        document.getElementById("errorMessage").classList.add("d-none");
+        document.getElementById("successMessage").innerText = response?.message;
         // Additional logic here
         showConversion();
       } else {
