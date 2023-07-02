@@ -143,9 +143,63 @@
               // Retrieve the user tracking data from the cookie
               $userData = isset($_COOKIE['crud-user']) ? json_decode($_COOKIE['crud-user'], true) : [];
               $token = "";
+
               if(count($userData) > 0){
                 $token = $userData['token'] ? $userData['token'] : '';
               }
+
+              if($token){
+                 // TODO:: VERIFY USER TOKEN
+                  $url = 'http://localhost/rahat/api/verify-jwt';
+                  $data = json_encode(array('token'=>$token));
+                  $ch = curl_init();
+                  curl_setopt($ch, CURLOPT_URL, $url);
+                  curl_setopt($ch, CURLOPT_POST, true);
+                  curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+                  curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+                  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+                  $response = curl_exec($ch);
+                  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                  $user=array();
+                  if ($httpCode === 200) {
+                    $user = json_decode($response, true);
+                  } else {
+                    echo "Failed to retrieve user profile.";
+                  }
+                  curl_close($ch);
+
+                  // TODO:: GET USER DETAILS 
+                  // Initialize cURL
+                  $curl = curl_init();
+
+                  // Set the URL
+                  $url = 'http://localhost/rahat/api/users/users/'.$user['email'] ;
+                  curl_setopt($curl, CURLOPT_URL, $url);
+
+                  // Set the request type to GET
+                  curl_setopt($curl, CURLOPT_HTTPGET, true);
+
+                  // Set options to return the response as a string
+                  curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+                  // Execute the request
+                  $response = curl_exec($curl);
+                  $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                  
+                  $userDetails = array();
+      
+                  if ($httpCode === 200) {
+                    $userDetails = json_decode($response, true);
+                  } else {
+                    echo "Failed to retrieve user profile.";
+                  }
+
+                  // Close cURL
+                  curl_close($curl);
+
+              }
+        
               if(!$token){
                 // User is not logged in
                 echo '
@@ -172,25 +226,35 @@
                   <a class="nav-link" href="favorite_currency.php">Favorite Currency</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="profile.php">Profile</a>
+                    <a class="nav-link text-primary" href="profile.php">'.$user['username'].'</a>
                   </li>
-                  
-                  <li class="nav-item dropdown d-none">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      Crud
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                      <li><a class="dropdown-item" href="users.php">Users</a></li>
-                      <li><a class="dropdown-item" href="posts.php">Posts</a></li>
-                      <li><a class="dropdown-item" href="students.php">Students</a></li>
-                      <li><a class="dropdown-item" href="books.php">Books</a></li>
-                      <li><a class="dropdown-item" href="results.php">Results</a></li>
-                    </ul>
-                  </li>
+                  ';
+
+                if(isset($userDetails['user_role']) && $userDetails['user_role'] == 'superadmin'){
+                  echo '
                   <li class="nav-item">
-                    <a class="nav-link" href="logout.php">Logout</a>
+                    <a class="nav-link" href="all_users.php">all Users</a>
                   </li>
-                ';
+                  ';
+                }
+
+                echo '
+                <li class="nav-item dropdown d-none">
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Crud
+                  </a>
+                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="users.php">Users</a></li>
+                    <li><a class="dropdown-item" href="posts.php">Posts</a></li>
+                    <li><a class="dropdown-item" href="students.php">Students</a></li>
+                    <li><a class="dropdown-item" href="books.php">Books</a></li>
+                    <li><a class="dropdown-item" href="results.php">Results</a></li>
+                  </ul>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="logout.php">Logout</a>
+                </li>
+              ';
               }
             ?>
           </ul>
