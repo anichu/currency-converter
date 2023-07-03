@@ -15,7 +15,6 @@ function generateJWTToken($payload, $secretKey, $expiration = 3600, $algorithm =
   return "Bearer " . $token;
 }
 
-
 // Verify a JWT token and return the decoded payload
 function verifyJWTToken($jwt, $secretKey)
 {
@@ -35,7 +34,6 @@ function verifyJWTToken($jwt, $secretKey)
     return ['message' => 'Invalid token'];
   }
 }
-
 
 Flight::route('/', function(){
 
@@ -65,8 +63,6 @@ Flight::route('GET /users', function(){
   $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
   Flight::json($users);
 });
-
-
 
 // Create a new new users
 Flight::route('POST /users', function(){
@@ -313,7 +309,6 @@ Flight::route('POST /login', function(){
   Flight::json(array('token' => $token), 200);
 });
 
-
 Flight::route('POST /verify-jwt',function(){
   $db = Flight::db();
   $userData = Flight::request()->data;
@@ -321,6 +316,26 @@ Flight::route('POST /verify-jwt',function(){
   $secretKey = 'anismolla537';
   $responseData = verifyJWTToken($token,$secretKey);
   Flight::json($responseData,200);
+});
+
+// Get all alerts matching the specified fromCurrency, toCurrency, and email
+Flight::route('GET /get_alert/@fromCurrency/@toCurrency/@email', function($fromCurrency, $toCurrency, $email) {
+  $db = Flight::db();
+  $query = 'SELECT * FROM alerts WHERE fromCurrency = :fromCurrency AND toCurrency = :toCurrency AND email = :email';
+  $stmt = $db->prepare($query);
+  $stmt->bindValue(':email', $email, PDO::PARAM_STR);
+  $stmt->bindValue(':fromCurrency', $fromCurrency, PDO::PARAM_STR);
+  $stmt->bindValue(':toCurrency', $toCurrency, PDO::PARAM_STR);
+  $stmt->execute();
+  $alerts = $stmt->fetch(PDO::FETCH_ASSOC);
+  
+
+  if (empty($alerts)) {
+    // No alerts found, return a not found response
+    Flight::json(['error' => 'No alerts found'], 404);
+  } else {
+    Flight::json(array('value'=> $alerts['value'] ));
+  }
 });
 
 

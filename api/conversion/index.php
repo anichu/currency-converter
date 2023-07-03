@@ -40,10 +40,11 @@ Flight::route('POST /conversion', function() {
   $email = $data['email'];
 
   // Check if the fromCurrency and toCurrency already exists in the database
-  $sql = 'SELECT COUNT(*) as count FROM conversion WHERE  fromCurrency = :fromCurrency AND toCurrency = :toCurrency';
+  $sql = 'SELECT COUNT(*) as count FROM conversion WHERE  fromCurrency = :fromCurrency AND toCurrency = :toCurrency AND email = :email';
   $stmt = $db->prepare($sql);
   $stmt->bindParam(':fromCurrency', $fromCurrency);
   $stmt->bindParam(':toCurrency', $toCurrency);
+  $stmt->bindParam(':email', $email);
   $stmt->execute();
   $result = $stmt->fetch(PDO::FETCH_ASSOC);
   $sameCurrencyCount = $result['count'];

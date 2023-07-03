@@ -4,21 +4,48 @@ require "../flight/autoload.php";
 require "../db.php";
 
 
-// Set a new alert for when a currency reaches a specific value
 Flight::route('POST /alerts', function() {
   $db = Flight::db();
   $data = Flight::request()->data;
-  $currency = $data['currency'];
   $value = $data['value'];
   $email = $data['email'];
-  $query = "INSERT INTO alerts (currency, value, email) VALUES (:currency, :value, :email)";
+  $fromCurrency = $data['fromCurrency'];
+  $toCurrency = $data['toCurrency'];
+
+  if($fromCurrency == $toCurrency){
+    // If a duplicate alert exists, return an error response
+    Flight::json(['message'=>'Invalid exchange currency'], 409);
+    return;
+  }
+
+  // Check if an alert with the same email, fromCurrency, and toCurrency already exists
+  $query = "SELECT COUNT(*) as count FROM alerts WHERE email = :email AND fromCurrency = :fromCurrency AND toCurrency = :toCurrency";
   $stmt = $db->prepare($query);
-  $stmt->bindValue(':currency', $currency, PDO::PARAM_STR);
-  $stmt->bindValue(':value', $value, PDO::PARAM_STR);
   $stmt->bindValue(':email', $email, PDO::PARAM_STR);
+  $stmt->bindValue(':fromCurrency', $fromCurrency, PDO::PARAM_STR);
+  $stmt->bindValue(':toCurrency', $toCurrency, PDO::PARAM_STR);
   $stmt->execute();
-  Flight::json(['message' => 'Alert created successfully']);
+  $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+  if ($result['count'] > 0) {
+    // If a duplicate alert exists, return an error response
+    Flight::json(['message' => 'Alert with the same email, fromCurrency, and toCurrency already exists'], 400);
+  } else {
+    // If no duplicate alert exists, proceed with the insertion
+    $query = "INSERT INTO alerts (value, email, fromCurrency, toCurrency) 
+    VALUES (:value, :email, :fromCurrency, :toCurrency)";
+    $stmt = $db->prepare($query);
+    $stmt->bindValue(':value', $value, PDO::PARAM_STR);
+    $stmt->bindValue(':email', $email, PDO::PARAM_STR);
+    $stmt->bindValue(':fromCurrency', $fromCurrency, PDO::PARAM_STR);
+    $stmt->bindValue(':toCurrency', $toCurrency, PDO::PARAM_STR);
+    $stmt->execute();
+
+    Flight::json(['message' => 'Alert created successfully']);
+  }
 });
+
+
 
 
 // Show all the set currency alerts
@@ -32,15 +59,15 @@ Flight::route('GET /alerts/all/@email', function($email) {
   Flight::json($alerts);
 });
 
-// Change the values or conditions of an existing alert
 Flight::route('PUT /alerts/@id', function($id) {
   $db = Flight::db();
   $data = Flight::request()->data;
-  $currency = $data['currency'] ?? null;
   $value = $data['value'] ?? null;
+  $fromCurrency = $data['fromCurrency'] ?? null;
+  $toCurrency = $data['toCurrency'] ?? null;
 
   // Check if none of the values are given
-  if (empty($currency) && empty($value)) {
+  if (empty($value) && empty($fromCurrency) && empty($toCurrency)) {
     Flight::json(['message' => 'At least one field is required for update'], 400);
     return;
   }
@@ -48,13 +75,17 @@ Flight::route('PUT /alerts/@id', function($id) {
   $query = "UPDATE alerts SET";
   $params = [];
 
-  if (!empty($currency)) {
-    $query .= " currency = :currency,";
-    $params[':currency'] = $currency;
-  }
   if (!empty($value)) {
     $query .= " value = :value,";
     $params[':value'] = $value;
+  }
+  if (!empty($fromCurrency)) {
+    $query .= " fromCurrency = :fromCurrency,";
+    $params[':fromCurrency'] = $fromCurrency;
+  }
+  if (!empty($toCurrency)) {
+    $query .= " toCurrency = :toCurrency,";
+    $params[':toCurrency'] = $toCurrency;
   }
 
   // Remove the trailing comma from the query
